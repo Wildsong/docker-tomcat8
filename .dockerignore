@@ -1,0 +1,4 @@
+# Files I don't want copied into the docker image during builds.
+.git/
+*~
+data/
