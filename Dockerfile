@@ -27,11 +27,9 @@ RUN chmod 644 /etc/logrotate.d/${TOMCAT}
 # Tsk tsk should not define passwords in the file.
 RUN sed -i "s/<\/tomcat-users>/<user username=\"siteadmin\" password=\"changeit\" roles=\"manager-gui\"\/><\/tomcat-users>/" /etc/${TOMCAT}/tomcat-users.xml
 
-# Do we really need TLS support here? Or can we use a proxy?
-# Create and install a self-signed certificate that actually works.
-# RUN keystore genkey /etc/${TOMCAT}/.keystore
+# Create and install a self-signed certificate.
+RUN keytool -genkey -alias tomcat -keyalg RSA -keystore /etc/${TOMCAT}/.keystore -storepass changeit
 # RUN sed .... /etc/${TOMCAT}/server.xml
-# Move Tomcat TLS server from 8443 to 443
 
 ENV PIDDIR=/var/run/${TOMCAT}
 RUN mkdir ${PIDDIR} && chown ${TOMCAT}.${TOMCAT} ${PIDDIR}
@@ -50,6 +48,7 @@ ENV CATALINA_BASE=/var/lib/${TOMCAT}
 # Set heap,memory etc opts here
 ENV CATALINA_OPTS="-Djava.awt.headless=true -Xmx128M"
 
-# The "tail" just gives ENTRYPOINT something to do
-# because startup.sh will exit after starting tomcat.
-CMD ${HOME}/bin/startup.sh && tail -f ${CATALINA_OUT}
+# The "&& bash" at the end gives ENTRYPOINT something to do;
+# the startup.sh script will exit after starting tomcat
+# and then the whole container will shut down!
+CMD ${HOME}/bin/startup.sh && bash
