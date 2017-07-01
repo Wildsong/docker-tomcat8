@@ -2,11 +2,9 @@ From geoceg/ubuntu-server:latest
 LABEL maintainer="b.wilson@geo-ceg.org"
 ENV REFRESHED_AT 2017-06-30
 
-# Let's try remapping ports in the docker run command, eh?  Not sure
-# if I can make ArcGIS Web Adaptor work this way, it's fussy.
-
+# If you need to expose the standard HTTP/HTTPS ports 80,443
+# you can map them in the 'docker run' command.
 EXPOSE 8080 8443
-#EXPOSE 80 443
 
 ENV TOMCAT=tomcat8
 ENV HOME=/usr/share/${TOMCAT}
@@ -19,17 +17,17 @@ RUN apt-get -y install ${TOMCAT} ${TOMCAT}-admin
 ADD logrotate /etc/logrotate.d/${TOMCAT}
 RUN chmod 644 /etc/logrotate.d/${TOMCAT}
 
-# Move Tomcat server from port 8080 to 80
-#RUN sed -i s/8080/80/g /etc/${TOMCAT}/server.xml
-#RUN sed -i s/#AUTHBIND=no/AUTHBIND=yes/g /etc/default/${TOMCAT}
-
 # This is only needed if you want to use the web gui to manage tomcat.
-# Tsk tsk should not define passwords in the file.
+# FIXME should not define passwords in the file.
 RUN sed -i "s/<\/tomcat-users>/<user username=\"siteadmin\" password=\"changeit\" roles=\"manager-gui\"\/><\/tomcat-users>/" /etc/${TOMCAT}/tomcat-users.xml
 
 # Create and install a self-signed certificate.
-RUN keytool -genkey -alias tomcat -keyalg RSA -keystore /etc/${TOMCAT}/.keystore -storepass changeit
-# RUN sed .... /etc/${TOMCAT}/server.xml
+RUN keytool -genkey -alias tomcat -keyalg RSA -keystore /etc/${TOMCAT}/.keystore \
+    -storepass changeit -keypass changeit \
+    -dname "CN=Abraham Lincoln, OU=Legal Department, O=Whig Party, L=Springfield, ST=Illinois, C=US"
+# Modify server.xml to activate the TLS service
+RUN sed -i "s/<Service name=\"Catalina\">/<Service name=\"Catalina\">\n    <Connector port=\"8443\" maxThreads=\"200\" scheme=\"https\" secure=\"true\" SSLEnabled=\"true\" keystorePass=\"changeit\" clientAuth=\"false\" sslProtocol=\"TLS\" keystoreFile=\"\/etc\/${TOMCAT}\/.keystore\" \/>/" \
+        /etc/${TOMCAT}/server.xml
 
 ENV PIDDIR=/var/run/${TOMCAT}
 RUN mkdir ${PIDDIR} && chown ${TOMCAT}.${TOMCAT} ${PIDDIR}
@@ -48,7 +46,9 @@ ENV CATALINA_BASE=/var/lib/${TOMCAT}
 # Set heap,memory etc opts here
 ENV CATALINA_OPTS="-Djava.awt.headless=true -Xmx128M"
 
-# The "&& bash" at the end gives ENTRYPOINT something to do;
-# the startup.sh script will exit after starting tomcat
-# and then the whole container will shut down!
-CMD ${HOME}/bin/startup.sh && bash
+# Exit if Tomcat service on port 8080 dies
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -sS 127.0.0.1:8080 || exit 1
+
+# Start Tomcat running in foreground (don't daemonize)
+CMD ${HOME}/bin/catalina.sh run
+
