@@ -45,12 +45,11 @@ If you are having problems, (for example the docker command starts and
 then exits a few seconds later) you can run in interactive mode
 and add "bash" to the end of the command.
 
-This Dockerfile uses an ENTRYPOINT instead of a CMD so it will always
-try to run tomcat even when you run in interactive mode, I hope this
-is okay.
-
 The -it options give you interactive mode and a terminal. The --rm option
 causes the whole container to stop when you exit the shell.
+
+Once the bash shell is running you can do "bin/startup.sh" to start tomcat
+and see what happens.
 
 ```
  docker run -it --rm --name tomcat8 \
@@ -61,8 +60,10 @@ causes the whole container to stop when you exit the shell.
 
 ## Files you should know about
 
-I install 'logrotate' so that tomcat8 logs get rotate, this only matters if you leave tomcat container(s)
-running for a long time (weeks|months|years)
+I install 'logrotate' so that tomcat8 logs get rotate, this only
+matters if you leave tomcat container(s) running for a long time
+(weeks|months|years)
 
-I find the log file most useful for debugging is catalina.out in /var/lib/tomcat8/logs.
+Look in the log file /var/log/tomcat8/catalina.out for error messages, 
+they can be very detailed and helpful.
 
