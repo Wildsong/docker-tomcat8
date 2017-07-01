@@ -33,6 +33,12 @@ If you have not already done so, now you can authorize the server, too.
  docker exec -it tomcat8 bash 
  ```
 
+If it's all working you should be able to open a browser and connect
+to port 80.  If you add "/manage" to the URL then you should be able
+to log into the admin site if you have not disabled it in the
+Dockerfile. (For example, try http://127.0.0.1/manage if you are running
+docker locally.)
+
 ### Troubleshooting
 
 If you are having problems, (for example the docker command starts and
