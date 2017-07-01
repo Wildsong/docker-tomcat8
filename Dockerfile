@@ -10,6 +10,7 @@ EXPOSE 8080 8443
 
 ENV TOMCAT=tomcat8
 ENV HOME=/usr/share/${TOMCAT}
+ENV WEBAPPS /var/lib/${TOMCAT}/webapps/
 
 RUN apt-get -y install openjdk-8-jre-headless
 RUN apt-get -y install ${TOMCAT} ${TOMCAT}-admin
