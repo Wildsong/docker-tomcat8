@@ -5,6 +5,8 @@ including Web Adaptor.
 
 It's just a basic tomcat8 server though so no reason you can't use it for other things!
 
+Note that it's running on ports 80/443 not 8080/8443! This is to better accomodate Web Adaptor.
+
 ## Build the Docker Image
 
  ```
@@ -23,8 +25,7 @@ The ArcGIS components need to talk to each other, so create Docker network like 
 Running in detached mode (in the Linux world we'd say "run as a daemon"):
 ```
  docker run -d --name tomcat8 \
-   -net arcgis-network \
-   -p 80:8080 -p 443:8443  \
+   -p 80:80 -p 443:443 --net arcgis-network \
    geoceg/tomcat8
 ```
 Once the server is up you can connect to it via bash shell
@@ -53,10 +54,13 @@ and see what happens.
 
 ```
  docker run -it --rm --name tomcat8 \
-  --net arcgis-network \
-  -p 80:8080 -p 443:8443  \
+   -p 80:80 -p 443:443 --net arcgis-network \
    geoceg/tomcat8 bash
 ```
+and the command to start would be
+```
+  authbind --deep -c ~/bin/catalina.sh
+```  
 
 ## Files you should know about
 
