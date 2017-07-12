@@ -13,9 +13,6 @@ RUN apt-get -y install openjdk-8-jre-headless
 # and a non-user writable home directory at ${APPSERVERHOME} (see below)
 RUN apt-get -y install ${TOMCAT}
 
-# In theory we can put static content here I think
-ENV WEBAPPS /var/lib/${TOMCAT}/webapps/
-
 # This is a workaround for a script bug in ESRI's configurewebadaptor.sh
 # When we run that script it will want write permission on Tomcat's home directory
 # and we can't give it access to /usr/share/tomcat8, that would be a security problem
@@ -23,7 +20,7 @@ ENV WEBAPPS /var/lib/${TOMCAT}/webapps/
 # Hopefully changing Tomcat's home won't mess up tomcat itself.
 
 ENV HOME=/home/${TOMCAT}
-ENV APPSERVERHOME=/usr/share/${TOMCAT}
+ENV CATALINA_HOME=/usr/share/${TOMCAT}
 RUN mkdir ${HOME} && chown -R ${TOMCAT}.${TOMCAT} ${HOME} && usermod --home ${HOME} ${TOMCAT}
 
 # This is only needed if you want to use the web gui to manage tomcat.
@@ -65,15 +62,17 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 ENV JSSE_HOME=${JAVA_HOME}/jre
 ENV CATALINA_OUT=/var/log/${TOMCAT}/catalina.out
 ENV CATALINA_TMPDIR=/tmp/${TOMCAT}
-RUN mkdir ${CATALINA_TMPDIR}
 ENV CATALINA_PID=${PIDDIR}/${TOMCAT}.pid
-
 ENV CATALINA_BASE=/var/lib/${TOMCAT}
+# Child containers deploy WAR files here.
+ENV CATALINA_APPS /var/lib/${TOMCAT}/webapps
 # Set heap,memory options here
 ENV CATALINA_OPTS="-Djava.awt.headless=true -Xmx128M"
+
+RUN touch ${CATALINA_OUT} && mkdir ${CATALINA_TMPDIR}
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -sS 127.0.0.1 || exit 1
 
 # Start Tomcat on low ports, running in foreground (don't daemonize)
-CMD authbind --deep -c ${APPSERVERHOME}/bin/catalina.sh run
+CMD authbind --deep -c ${CATALINA_HOME}/bin/catalina.sh run
 
