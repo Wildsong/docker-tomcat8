@@ -1,6 +1,6 @@
 From geoceg/ubuntu-server:latest
 LABEL maintainer="b.wilson@geo-ceg.org"
-ENV REFRESHED_AT 2017-07-10
+ENV REFRESHED_AT 2017-07-12
 
 # We can't use the standard ports 8080, 8443 in Web Adaptor
 EXPOSE 80 443
