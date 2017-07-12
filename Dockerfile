@@ -10,7 +10,7 @@ ENV TOMCAT=tomcat8
 RUN apt-get -y install openjdk-8-jre-headless
 
 # In addtion to installing the server, this creates the tomcat8 user, group,
-# and a non-user writable home directory at ${APPSERVERHOME} (see below)
+# and a non-user writable home directory at ${CATALINA_HOME} (see below)
 RUN apt-get -y install ${TOMCAT}
 
 # This is a workaround for a script bug in ESRI's configurewebadaptor.sh
