@@ -6,18 +6,32 @@ ENV REFRESHED_AT 2017-07-10
 EXPOSE 80 443
 
 ENV TOMCAT=tomcat8
-ENV HOME=/usr/share/${TOMCAT}
-ENV WEBAPPS /var/lib/${TOMCAT}/webapps/
 
 RUN apt-get -y install openjdk-8-jre-headless
+
+# In addtion to installing the server, this creates the tomcat8 user, group,
+# and a non-user writable home directory at ${APPSERVERHOME} (see below)
 RUN apt-get -y install ${TOMCAT}
+
+# In theory we can put static content here I think
+ENV WEBAPPS /var/lib/${TOMCAT}/webapps/
+
+# This is a workaround for a script bug in ESRI's configurewebadaptor.sh
+# When we run that script it will want write permission on Tomcat's home directory
+# and we can't give it access to /usr/share/tomcat8, that would be a security problem
+# So we create a new home for it and then modify /etc/passwd to match.
+# Hopefully changing Tomcat's home won't mess up tomcat itself.
+
+ENV HOME=/home/${TOMCAT}
+ENV APPSERVERHOME=/usr/share/${TOMCAT}
+RUN mkdir ${HOME} && chown -R ${TOMCAT}.${TOMCAT} ${HOME} && usermod --home ${HOME} ${TOMCAT}
 
 # This is only needed if you want to use the web gui to manage tomcat.
 #RUN apt-get -y install ${TOMCAT}-admin
 # FIXME should not define passwords in the file.
 #RUN sed -i "s/<\/tomcat-users>/<user username=\"siteadmin\" password=\"changeit\" roles=\"manager-gui\"\/><\/tomcat-users>/" /etc/${TOMCAT}/tomcat-users.xml
 
-# Note, there is a "tomcat8" string embedded in this script.
+# Note, there is a "tomcat8" string embedded in this script. This needs fixing.
 ADD logrotate /etc/logrotate.d/${TOMCAT}
 RUN chmod 644 /etc/logrotate.d/${TOMCAT}
 
@@ -61,5 +75,5 @@ ENV CATALINA_OPTS="-Djava.awt.headless=true -Xmx128M"
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -sS 127.0.0.1 || exit 1
 
 # Start Tomcat on low ports, running in foreground (don't daemonize)
-CMD authbind --deep -c ${HOME}/bin/catalina.sh run
+CMD authbind --deep -c ${APPSERVERHOME}/bin/catalina.sh run
 
