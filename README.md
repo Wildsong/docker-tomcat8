@@ -9,30 +9,35 @@ Note that it's running on ports 80/443 not 8080/8443! This is to better accomoda
 
 ## Build the Docker Image
 
- ```
- docker build -t geoceg/tomcat8 .
- ```
+    docker build -t geoceg/tomcat8 .
+
 (My github repo is "geo-ceg", but Docker repo is "geoceg" (no dash). This is not a typo.)
+
+## Set up environment
+
+For example, put this in .bash_profile
+
+    export AGS_DOMAIN="wildsong.lan"
 
 ## Create a network
 
 The ArcGIS components need to talk to each other, so create Docker network like this:
 
- sudo docker network create arcgis-network
+    sudo docker network create $AGS_DOMAIN
 
 ## Run the command
 
 Running in detached mode (in the Linux world we'd say "run as a daemon"):
-```
- docker run -d --name tomcat8 \
-   -p 80:80 -p 443:443 --net arcgis-network \
-   geoceg/tomcat8
-```
+
+    docker run -d --name tomcat8 \
+       -p 80:80 -p 443:443 --net ${AGS_DOMAIN} \
+       -e AGS_DOMAIN \
+       geoceg/tomcat8
+
 Once the server is up you can connect to it via bash shell
 If you have not already done so, now you can authorize the server, too.
- ```
- docker exec -it tomcat8 bash 
- ```
+
+    docker exec -it tomcat8 bash 
 
 If it's all working you should be able to open a browser and connect
 to port 80.  If you add "/manage" to the URL then you should be able
@@ -52,15 +57,14 @@ causes the whole container to stop when you exit the shell.
 Once the bash shell is running you can do "bin/startup.sh" to start tomcat
 and see what happens.
 
-```
- docker run -it --rm --name tomcat8 \
-   -p 80:80 -p 443:443 --net arcgis-network \
-   geoceg/tomcat8 bash
-```
+    docker run -it --rm --name tomcat8 \
+       -p 80:80 -p 443:443 --net ${AGS_DOMAIN} \
+       -e AGS_DOMAIN \
+       geoceg/tomcat8 bash
+
 and the command to start would be
-```
-  authbind --deep -c ~/bin/catalina.sh
-```  
+
+    authbind --deep -c ~/bin/catalina.sh
 
 ## Files you should know about
 
