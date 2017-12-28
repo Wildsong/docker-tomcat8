@@ -23,7 +23,7 @@ For example, put this in .bash_profile
 
 The ArcGIS components need to talk to each other, so create Docker network like this:
 
-    sudo docker network create $AGS_DOMAIN
+    docker network create $AGS_DOMAIN
 
 ## Run the command
 
